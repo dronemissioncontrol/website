@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in | Fleet107</title>
+<link rel="stylesheet" href="auth.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="top"><a class="logo" href="index.html">FLEET<span>107</span></a></div>
+<div class="box">
+  <div class="card">
+    <h1>Log in</h1>
+    <p class="sub">Welcome back.</p>
+    <form id="form">
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="email">
+      <label for="password">Password</label>
+      <input id="password" type="password" required autocomplete="current-password">
+      <button id="btn" type="submit">Log in</button>
+      <div id="msg" class="msg"></div>
+    </form>
+    <p class="alt"><a href="#" id="forgot">Forgot password?</a></p>
+    <p class="alt">No account? <a href="register.html">Register</a></p>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+const form = document.getElementById("form");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("btn");
+
+// Already logged in? Go straight to the dashboard.
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.href = "dashboard.html";
+});
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msg.className = "msg"; msg.textContent = "";
+  btn.disabled = true;
+
+  const { error } = await sb.auth.signInWithPassword({
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value
+  });
+
+  btn.disabled = false;
+  if (error) {
+    msg.className = "msg err";
+    msg.textContent = error.message;
+    return;
+  }
+  window.location.href = "dashboard.html";
+});
+
+document.getElementById("forgot").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  if (!email) {
+    msg.className = "msg err";
+    msg.textContent = "Enter your email above first.";
+    return;
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + "/dashboard.html"
+  });
+  msg.className = error ? "msg err" : "msg ok";
+  msg.textContent = error ? error.message : "Password reset email sent.";
+});
+</script>
+</body>
+</html>

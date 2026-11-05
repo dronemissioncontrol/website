@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard | Fleet107</title>
+<link rel="stylesheet" href="auth.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="top">
+  <a class="logo" href="index.html">FLEET<span>107</span></a>
+  <button id="logout" class="btn small" type="button">Log out</button>
+</div>
+<div class="wrap">
+  <h1>Welcome, <span id="name">...</span><span id="role" class="badge"></span></h1>
+  <p class="sub" id="email"></p>
+  <div class="grid" id="panels"></div>
+</div>
+<script src="config.js"></script>
+<script>
+function panel(title, text) {
+  const d = document.createElement("div");
+  d.className = "panel";
+  const h = document.createElement("h3"); h.textContent = title;
+  const p = document.createElement("p"); p.textContent = text;
+  d.append(h, p);
+  return d;
+}
+
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = "login.html"; return; }
+
+  const { data: profile, error } = await sb
+    .from("profiles").select("full_name, role").eq("id", session.user.id).single();
+
+  if (error || !profile) {
+    document.getElementById("name").textContent = "there";
+    document.getElementById("email").textContent = session.user.email;
+    return;
+  }
+
+  document.getElementById("name").textContent = profile.full_name || "there";
+  document.getElementById("role").textContent = profile.role;
+  document.getElementById("email").textContent = session.user.email;
+
+  const panels = document.getElementById("panels");
+  if (profile.role === "pilot") {
+    panels.append(
+      panel("My jobs", "Assigned and completed jobs will appear here. (Coming soon)"),
+      panel("Certifications", "Part 107 and insurance details. (Coming soon)"),
+      panel("Equipment", "Aircraft and sensors you operate. (Coming soon)")
+    );
+  } else {
+    panels.append(
+      panel("My projects", "Your requested and active projects will appear here. (Coming soon)"),
+      panel("Deliverables", "Maps, models and thermal reports for download. (Coming soon)"),
+      panel("Request a quote", "Tell us what you need mapped or inspected. (Coming soon)")
+    );
+  }
+})();
+
+document.getElementById("logout").addEventListener("click", async () => {
+  await sb.auth.signOut();
+  window.location.href = "login.html";
+});
+</script>
+</body>
+</html>
